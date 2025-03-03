@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  email String  @unique
+  name  String?
+  token String?
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  role    UserRole  @default(USER)
+  submissions Submission[]
+}
+
+model Problem{
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  title String
+  description String
+  slug  String  @unique
+  solved  Int @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  difficulty  Difficulty  @default(MEDIUM)
+  submissions Submission[]
+  defaultCode DefaultCode[]
+}
+
+model DefaultCode{
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  languageId  String  @db.ObjectId
+  problemId   String  @db.ObjectId
+  code        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  problem     Problem @relation(fields: [problemId], references: [id])
+  language    Language  @relation(fields: [languageId], references: [id])
+  @@unique([problemId, languageId])
+}
+
+model Submission{
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  problemId   String @db.ObjectId
+  tokens      String[]
+  userId      String  @db.ObjectId
+  languageId  String  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+  code        String
+  fullCode    String
+  status      String
+  results     Json[]
+  testcases   TestCase[]
+  memory      Int?
+  time        Float?
+  user        User  @relation(fields: [userId], references: [id])
+  language    Language  @relation(fields: [languageId], references: [id])
+  problem     Problem   @relation(fields: [problemId], references: [id])
+}
+
+model Language{
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  judgeOID    Int @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+  Submission  Submission[]
+  DefaultCode DefaultCode[]
+}
+
+model TestCase{
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  status      TestCaseResult  @default(PENDING)
+  index       Int
+  submission  Submission @relation(fields: [submissionId], references: [id])
+  submissionId  String  @db.ObjectId
+  memory      Int?
+  time        Float?
+  judge0TrackingId    String  @unique
+}
+
+enum TestCaseResult{
+  AC
+  FAIL
+  TLE 
+  COMPILATION_ERROR
+  PENDING
+}
+
+enum Difficulty{
+  EASY 
+  MEDIUM
+  HARD
+}
+
+enum SubmissionResult{
+  AC
+  REJECTED
+  PENDING
+}
+
+enum UserRole{
+  ADMIN
+  USER
+}
