@@ -68,7 +68,11 @@ export const getProblem = async (id: number): Promise<IProblemWithDescription | 
   }
 
   try {
+<<<<<<< HEAD
     const filePath = path.join(process.cwd(), 'src', 'problems' , fileName);
+=======
+    const filePath = path.join(process.cwd(), 'src', 'lib', 'problems' , fileName);
+>>>>>>> 5d83dfc1aceb3a6c18f7fd8d0f9c07ddad843d22
     const fileContent = await fsPromises.readFile(filePath, 'utf8');
     
     return {
